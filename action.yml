@@ -4,6 +4,10 @@ author: 'jburgess'
 
 # Define your inputs here.
 inputs:
+  githubToken:
+    description: GitHub access token
+    default: ${{ github.token }}
+    required: true
   labelsToAdd:
     description: 'The labels to add to the pull request. If a label is in both labelsToAdd and labelsToRemove, it will be removed.'
     required: false

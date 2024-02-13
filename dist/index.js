@@ -28999,7 +28999,7 @@ async function run() {
     const labelsToRemoveStr = core.getInput('labelsToRemove', {
       required: false
     })
-    const token = core.getInput('GITHUB_TOKEN')
+    const token = core.getInput('githubToken')
 
     if (!labelsToAddStr && !labelsToRemoveStr) {
       core.setFailed(
@@ -29029,7 +29029,7 @@ async function run() {
       // Convert the Set to a Comma-Separated String
       await octokit.rest.issues.addLabels({
         ...parameters,
-        labels: labelsToAdd.join(', ')
+        labels: labelsToAdd
       })
     }
 

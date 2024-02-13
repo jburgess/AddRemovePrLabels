@@ -49,7 +49,7 @@ describe('Add RemovPR Labels Test Suite', () => {
           return 'A,B,C'
         case 'labelsToRemove':
           return 'C,D,E'
-        case 'GITHUB_TOKEN':
+        case 'githubToken':
           return 'fake-token' // Mocking GITHUB_TOKEN if required for octokit initialization
         default:
           return ''
@@ -59,7 +59,7 @@ describe('Add RemovPR Labels Test Suite', () => {
     expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledWith(
       expect.objectContaining({
         ...parameters,
-        labels: expect.stringContaining('A, B') // Checks if the labels string includes "A, B"
+        labels: expect.arrayContaining(['A', 'B']) // Checks if the labels string includes "A, B"
       })
     )
 
@@ -107,7 +107,7 @@ describe('Add RemovPR Labels Test Suite', () => {
     expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledWith(
       expect.objectContaining({
         ...parameters,
-        labels: expect.stringContaining('A, B, C')
+        labels: expect.arrayContaining(['A', 'B', 'C'])
       })
     )
     expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledTimes(1)
