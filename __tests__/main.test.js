@@ -1,96 +1,169 @@
-/**
- * Unit tests for the action's main functionality, src/main.js
- */
+const { run } = require('../src/main')
 const core = require('@actions/core')
-const main = require('../src/main')
+const github = require('@actions/github')
 
-// Mock the GitHub Actions core library
-const debugMock = jest.spyOn(core, 'debug').mockImplementation()
-const getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
-const setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
-const setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
+jest.mock('@actions/core')
 
-// Mock the action's main function
-const runMock = jest.spyOn(main, 'run')
+jest.mock('@actions/github', () => ({
+  getOctokit: jest.fn().mockReturnValue({
+    rest: {
+      issues: {
+        addLabels: jest.fn().mockResolvedValue({}),
+        removeLabel: jest.fn().mockResolvedValue({}),
+        listLabelsOnIssue: jest.fn().mockResolvedValue({ data: ['A', 'B'] })
+      }
+    }
+  }),
+  context: {
+    eventName: 'pull_request',
+    payload: {
+      pull_request: {
+        base: { repo: { name: 'repoName' } },
+        number: 1
+      },
+      repository: {
+        owner: { login: 'ownerName' }
+      }
+    }
+  }
+}))
 
-// Other utilities
-const timeRegex = /^\d{2}:\d{2}:\d{2}/
+const parameters = {
+  owner: 'ownerName',
+  repo: 'repoName',
+  issue_number: 1
+}
 
-describe('action', () => {
+describe('Add RemovPR Labels Test Suite', () => {
   beforeEach(() => {
+    // Clear all mocks before each test
     jest.clearAllMocks()
+    core.getInput.mockImplementation()
   })
 
-  it('sets the time output', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation(name => {
+  it('should successfully add and remove labels based on inputs', async () => {
+    // Mock implementation of core.getInput to return different values based on input name
+    core.getInput.mockImplementation(name => {
       switch (name) {
-        case 'milliseconds':
-          return '500'
+        case 'labelsToAdd':
+          return 'A,B,C'
+        case 'labelsToRemove':
+          return 'C,D,E'
+        case 'GITHUB_TOKEN':
+          return 'fake-token' // Mocking GITHUB_TOKEN if required for octokit initialization
         default:
           return ''
       }
     })
+    await run()
+    expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...parameters,
+        labels: expect.stringContaining('A, B') // Checks if the labels string includes "A, B"
+      })
+    )
 
-    await main.run()
-    expect(runMock).toHaveReturned()
+    expect(github.getOctokit().rest.issues.removeLabel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...parameters,
+        name: 'C'
+      })
+    )
 
-    // Verify that all of the core library functions were called correctly
-    expect(debugMock).toHaveBeenNthCalledWith(1, 'Waiting 500 milliseconds ...')
-    expect(debugMock).toHaveBeenNthCalledWith(
-      2,
-      expect.stringMatching(timeRegex)
+    expect(github.getOctokit().rest.issues.removeLabel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...parameters,
+        name: 'D'
+      })
     )
-    expect(debugMock).toHaveBeenNthCalledWith(
-      3,
-      expect.stringMatching(timeRegex)
+
+    expect(github.getOctokit().rest.issues.removeLabel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...parameters,
+        name: 'E'
+      })
     )
-    expect(setOutputMock).toHaveBeenNthCalledWith(
-      1,
-      'time',
-      expect.stringMatching(timeRegex)
-    )
+
+    // This assertion checks that removeLabel is called, adjust as necessary for your implementation
+    expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledTimes(1) // Assuming two labels to remove based on the mock
+    expect(github.getOctokit().rest.issues.removeLabel).toHaveBeenCalledTimes(3) // Assuming two labels to remove based on the mock
+
+    expect(core.setFailed).not.toHaveBeenCalled()
   })
 
-  it('sets a failed status', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation(name => {
+  it('should handle null remove labels', async () => {
+    // Mock implementation of core.getInput to return different values based on input name
+    core.getInput.mockImplementation(name => {
       switch (name) {
-        case 'milliseconds':
-          return 'this is not a number'
+        case 'labelsToAdd':
+          return 'A,B,C'
+        case 'GITHUB_TOKEN':
+          return 'fake-token' // Mocking GITHUB_TOKEN if required for octokit initialization
         default:
           return ''
       }
     })
-
-    await main.run()
-    expect(runMock).toHaveReturned()
-
-    // Verify that all of the core library functions were called correctly
-    expect(setFailedMock).toHaveBeenNthCalledWith(
-      1,
-      'milliseconds not a number'
+    await run()
+    expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...parameters,
+        labels: expect.stringContaining('A, B, C')
+      })
     )
+    expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledTimes(1)
+    expect(github.getOctokit().rest.issues.removeLabel).toHaveBeenCalledTimes(0)
   })
 
-  it('fails if no input is provided', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation(name => {
+  it('should handle null add labels', async () => {
+    // Mock implementation of core.getInput to return different values based on input name
+    core.getInput.mockImplementation(name => {
       switch (name) {
-        case 'milliseconds':
-          throw new Error('Input required and not supplied: milliseconds')
+        case 'labelsToRemove':
+          return 'C'
+        case 'GITHUB_TOKEN':
+          return 'fake-token' // Mocking GITHUB_TOKEN if required for octokit initialization
         default:
           return ''
       }
     })
+    await run()
 
-    await main.run()
-    expect(runMock).toHaveReturned()
-
-    // Verify that all of the core library functions were called correctly
-    expect(setFailedMock).toHaveBeenNthCalledWith(
-      1,
-      'Input required and not supplied: milliseconds'
+    expect(github.getOctokit().rest.issues.removeLabel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...parameters,
+        name: 'C'
+      })
     )
+    expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledTimes(0)
+    expect(github.getOctokit().rest.issues.removeLabel).toHaveBeenCalledTimes(1)
+  })
+
+  it('should handle when labelsToAdd and labelsToRemove are not supplied', async () => {
+    await run()
+    expect(core.setFailed).toHaveBeenCalledWith(
+      'You must provide at least one of labelsToAdd or labelsToRemove'
+    )
+    expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledTimes(0)
+    expect(github.getOctokit().rest.issues.removeLabel).toHaveBeenCalledTimes(0)
+  })
+
+  it('should handle errors gracefully', async () => {
+    // Simulate an error condition, e.g., by throwing an error when trying to add labels
+    core.getInput.mockImplementation(name => {
+      switch (name) {
+        case 'labelsToAdd':
+          return 'A,B,C'
+        case 'GITHUB_TOKEN':
+          return 'fake-token' // Mocking GITHUB_TOKEN if required for octokit initialization
+        default:
+          return ''
+      }
+    })
+    github
+      .getOctokit()
+      .rest.issues.addLabels.mockRejectedValue(new Error('Test error'))
+    await run()
+
+    expect(core.setFailed).toHaveBeenCalledWith('Test error')
   })
 })
