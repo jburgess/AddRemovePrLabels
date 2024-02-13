@@ -1,18 +1,21 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'AddRemovePrLabels'
+description: 'This action adds or removes labels from a pull request based on the parameters provided.'
+author: 'jburgess'
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
-    required: true
-    default: '1000'
+  labelsToAdd:
+    description: 'The labels to add to the pull request. If a label is in both labelsToAdd and labelsToRemove, it will be removed.'
+    required: false
+
+  labelsToRemove:
+    description: 'The labels to remove from the pull request. If a label is in both labelsToAdd and labelsToRemove, it will be removed.'
+    required: false
 
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  labelsAfterAction:
+    description: 'The labels that are contained in the pull request after the action has run.'
 
 runs:
   using: node20
