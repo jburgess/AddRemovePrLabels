@@ -1,5 +1,5 @@
-name: 'AddRemovePrLabels'
-description: 'This action adds or removes labels from a pull request based on the parameters provided.'
+name: 'Add and Remove PR Labels'
+description: 'This action provides the ability to add and/or removes labels from a pull request based on the parameters provided.'
 author: 'jburgess'
 branding:
   color: orange
