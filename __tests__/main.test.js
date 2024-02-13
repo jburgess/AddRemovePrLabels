@@ -59,7 +59,7 @@ describe('Add RemovPR Labels Test Suite', () => {
     expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledWith(
       expect.objectContaining({
         ...parameters,
-        labels: expect.stringContaining('A, B') // Checks if the labels string includes "A, B"
+        labels: expect.arrayContaining(['A', 'B']) // Checks if the labels string includes "A, B"
       })
     )
 
@@ -107,7 +107,7 @@ describe('Add RemovPR Labels Test Suite', () => {
     expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledWith(
       expect.objectContaining({
         ...parameters,
-        labels: expect.stringContaining('A, B, C')
+        labels: expect.arrayContaining(['A', 'B', 'C'])
       })
     )
     expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledTimes(1)

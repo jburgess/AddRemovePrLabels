@@ -29029,7 +29029,7 @@ async function run() {
       // Convert the Set to a Comma-Separated String
       await octokit.rest.issues.addLabels({
         ...parameters,
-        labels: labelsToAdd.join(', ')
+        labels: labelsToAdd
       })
     }
 
