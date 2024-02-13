@@ -49,7 +49,7 @@ describe('Add RemovPR Labels Test Suite', () => {
           return 'A,B,C'
         case 'labelsToRemove':
           return 'C,D,E'
-        case 'GITHUB_TOKEN':
+        case 'githubToken':
           return 'fake-token' // Mocking GITHUB_TOKEN if required for octokit initialization
         default:
           return ''
