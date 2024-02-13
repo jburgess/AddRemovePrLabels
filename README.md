@@ -1,7 +1,6 @@
 # Add Remove PR Labels
 
 [![GitHub Super-Linter](https://github.com/jburgess/AddRemovePrLabels/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
-![CI](https://github.com/jburgess/AddRemovePrLabels/actions/workflows/ci.yml/badge.svg)
 
 This action adds or removes labels from a pull request based on input
 parameters.

@@ -1,6 +1,9 @@
 name: 'AddRemovePrLabels'
 description: 'This action adds or removes labels from a pull request based on the parameters provided.'
 author: 'jburgess'
+branding:
+  color: orange
+  icon: tag
 
 # Define your inputs here.
 inputs:
