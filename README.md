@@ -8,6 +8,7 @@ This action adds or removes labels from a pull request based on input parameters
 If a label is specified in both `labelsToAdd` and `labelsToRemove`, it will be removed.
 
 ## Usage
+
 ```yaml
 steps:
   - name: Label Pull Request
@@ -22,4 +23,6 @@ steps:
     run: echo "${{ steps.labelPr.outputs.labelsAfterAction }}"
 ```
 
-The above example will add `label1` and remove `label2` and `label3` from the pull request. If `label2` is present, it will be removed. If `label3` is present, it will be removed. If `label1` is not present, it will be added.
+The above example will add `label1` and remove `label2` and `label3` from the pull request. 
+If `label2` is present, it will be removed. 
+If `label3` is present, it will be removed. If `label1` is not present, it will be added.
