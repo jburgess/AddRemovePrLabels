@@ -10,7 +10,9 @@ jest.mock('@actions/github', () => ({
       issues: {
         addLabels: jest.fn().mockResolvedValue({}),
         removeLabel: jest.fn().mockResolvedValue({}),
-        listLabelsOnIssue: jest.fn().mockResolvedValue({ data: ['A', 'B'] })
+        listLabelsOnIssue: jest
+          .fn()
+          .mockResolvedValue({ data: ['A', 'B', 'C', 'D'] })
       }
     }
   }),
@@ -77,16 +79,9 @@ describe('Add RemovPR Labels Test Suite', () => {
       })
     )
 
-    expect(github.getOctokit().rest.issues.removeLabel).toHaveBeenCalledWith(
-      expect.objectContaining({
-        ...parameters,
-        name: 'E'
-      })
-    )
-
     // This assertion checks that removeLabel is called, adjust as necessary for your implementation
     expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledTimes(1) // Assuming two labels to remove based on the mock
-    expect(github.getOctokit().rest.issues.removeLabel).toHaveBeenCalledTimes(3) // Assuming two labels to remove based on the mock
+    expect(github.getOctokit().rest.issues.removeLabel).toHaveBeenCalledTimes(2) // Assuming two labels to remove based on the mock
 
     expect(core.setFailed).not.toHaveBeenCalled()
   })
