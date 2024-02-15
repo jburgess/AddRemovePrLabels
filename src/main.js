@@ -54,18 +54,28 @@ async function run() {
       })
     }
 
+    // Get the labels for the pull request after the changes
+    const { data: labelsPostAdd } =
+      await octokit.rest.issues.listLabelsOnIssue(parameters)
+
+    // Get the intersection of labels to remove based on the labelsPostAdd
+    const labelsToRemoveSet = new Set(labelsToRemove)
+    const labelsToRemoveIntersection = labelsPostAdd.filter(label =>
+      labelsToRemoveSet.has(label)
+    )
+
     // Remove labels from the pull request if the Set contains any labels
-    if (labelsToRemove.length > 0) {
-      for (const label of labelsToRemove) {
+    if (labelsToRemoveIntersection.length > 0) {
+      for (const label of labelsToRemoveIntersection) {
         try {
-          core.debug(`Removing label: ${label}`)
+          core.debug(`Removing label: ${label.name}`)
           await octokit.rest.issues.removeLabel({
             ...parameters,
             name: label
           })
         } catch (error) {
           // Log the error and continue with the next label
-          core.error(`Error removing label ${label}: ${error.message}`)
+          core.error(`Error removing label ${label.name}: ${error.message}`)
         }
       }
     }
