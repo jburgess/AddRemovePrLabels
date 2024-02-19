@@ -3,6 +3,71 @@ const github = require('@actions/github')
 const { createAddLabelsSet, createRemoveLabelsSet } = require('./labels')
 
 /**
+ * Fetches the current labels on the pull request.
+ * @param octokit The Octokit instance.
+ * @param parameters The parameters for the GitHub API call.
+ * @returns {Promise<Set<string>>} A promise that resolves to a set of label names.
+ */
+async function getCurrentLabels(octokit, parameters) {
+  const { data: labels } =
+    await octokit.rest.issues.listLabelsOnIssue(parameters)
+  return new Set(labels.map(label => label.name))
+}
+
+/**
+ * Adds labels to the pull request if they are not already applied.
+ * @param octokit The Octokit instance.
+ * @param parameters The parameters for the GitHub API call.
+ * @param labelsToAdd The labels to add.
+ * @param currentLabels The current labels on the pull request.
+ */
+async function addLabelsIfNeeded(
+  octokit,
+  parameters,
+  labelsToAdd,
+  currentLabels
+) {
+  const labelsToAddFiltered = labelsToAdd.filter(
+    label => !currentLabels.has(label)
+  )
+  if (labelsToAddFiltered.length > 0) {
+    await octokit.rest.issues.addLabels({
+      ...parameters,
+      labels: labelsToAddFiltered
+    })
+  }
+}
+
+/**
+ * Removes labels from the pull request if they are applied.
+ * @param octokit The Octokit instance.
+ * @param parameters The parameters for the GitHub API call.
+ * @param labelsToRemove The labels to remove.
+ * @param currentLabels The current labels on the pull request.
+ */
+async function removeLabelsIfNeeded(
+  octokit,
+  parameters,
+  labelsToRemove,
+  currentLabels
+) {
+  const labelsToRemoveFiltered = labelsToRemove.filter(label =>
+    currentLabels.has(label)
+  )
+  for (const label of labelsToRemoveFiltered) {
+    try {
+      core.debug(`Removing label: ${label}`)
+      await octokit.rest.issues.removeLabel({
+        ...parameters,
+        name: label
+      })
+    } catch (error) {
+      core.error(`Error removing label ${label}: ${error.message}`)
+    }
+  }
+}
+
+/**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
@@ -45,55 +110,27 @@ async function run() {
       issue_number: pullRequestNumber
     }
 
-    // Add labels to the pull request if the Set contains any labels
-    if (labelsToAdd.length > 0) {
-      // Convert the Set to a Comma-Separated String
-      await octokit.rest.issues.addLabels({
-        ...parameters,
-        labels: labelsToAdd
-      })
-    }
+    // Fetch current labels before any operations
+    let currentLabels = await getCurrentLabels(octokit, parameters)
 
-    // Get the labels for the pull request after the changes
-    const { data: labelsPostAdd } =
-      await octokit.rest.issues.listLabelsOnIssue(parameters)
+    // Add labels if needed
+    await addLabelsIfNeeded(octokit, parameters, labelsToAdd, currentLabels)
 
-    // Get the intersection of labels to remove based on the labelsPostAdd
-    const labelsToRemoveSet = new Set(labelsToRemove)
-    const labelsToRemoveIntersection = labelsPostAdd.filter(label =>
-      labelsToRemoveSet.has(label)
+    // Refresh current labels after adding labels before removing
+    currentLabels = await getCurrentLabels(octokit, parameters)
+
+    // Remove labels if needed
+    await removeLabelsIfNeeded(
+      octokit,
+      parameters,
+      labelsToRemove,
+      currentLabels
     )
 
-    // Remove labels from the pull request if the Set contains any labels
-    if (labelsToRemoveIntersection.length > 0) {
-      for (const label of labelsToRemoveIntersection) {
-        try {
-          core.debug(`Removing label: ${label.name}`)
-          await octokit.rest.issues.removeLabel({
-            ...parameters,
-            name: label
-          })
-        } catch (error) {
-          // Log the error and continue with the next label
-          core.error(`Error removing label ${label.name}: ${error.message}`)
-        }
-      }
-    }
-
-    // Get the labels for the pull request after the changes
-    const { data: labelsAfterAction } =
-      await octokit.rest.issues.listLabelsOnIssue(parameters)
-
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Labels to add: ${labelsToAddStr}`)
-    core.debug(`Labels to remove: ${labelsToRemoveStr}`)
-
-    // Set outputs for other workflow steps to use
-    core.setOutput('labelsAfterAction', labelsAfterAction)
+    // Final fetch of labels to set output accurately
+    const labelsAfterAction = await getCurrentLabels(octokit, parameters)
+    core.setOutput('labelsAfterAction', Array.from(labelsAfterAction))
   } catch (error) {
-    // Fail the workflow run if an error occurs
     core.setFailed(error.message)
   }
 }
