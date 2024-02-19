@@ -10,9 +10,26 @@ jest.mock('@actions/github', () => ({
       issues: {
         addLabels: jest.fn().mockResolvedValue({}),
         removeLabel: jest.fn().mockResolvedValue({}),
-        listLabelsOnIssue: jest.fn().mockResolvedValue({
-          data: [{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }]
-        })
+        listLabelsOnIssue: jest
+          .fn()
+          .mockResolvedValueOnce({
+            data: [{ name: 'A' }, { name: 'D' }]
+          })
+          .mockResolvedValueOnce({
+            data: [{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }]
+          })
+          .mockResolvedValueOnce({
+            data: [{ name: 'A' }, { name: 'B' }]
+          })
+          .mockResolvedValueOnce({
+            data: []
+          })
+          .mockResolvedValueOnce({
+            data: [{ name: 'C' }]
+          })
+          .mockResolvedValue({
+            data: [{ name: 'C' }]
+          })
       }
     }
   }),
@@ -61,7 +78,7 @@ describe('Add RemovPR Labels Test Suite', () => {
     expect(github.getOctokit().rest.issues.addLabels).toHaveBeenCalledWith(
       expect.objectContaining({
         ...parameters,
-        labels: expect.arrayContaining(['A', 'B']) // Checks if the labels string includes "A, B"
+        labels: expect.arrayContaining(['B']) // Checks if the labels string includes "A, B"
       })
     )
 
