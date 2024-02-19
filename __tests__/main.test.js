@@ -10,9 +10,9 @@ jest.mock('@actions/github', () => ({
       issues: {
         addLabels: jest.fn().mockResolvedValue({}),
         removeLabel: jest.fn().mockResolvedValue({}),
-        listLabelsOnIssue: jest
-          .fn()
-          .mockResolvedValue({ data: ['A', 'B', 'C', 'D'] })
+        listLabelsOnIssue: jest.fn().mockResolvedValue({
+          data: [{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }]
+        })
       }
     }
   }),

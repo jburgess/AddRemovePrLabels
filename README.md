@@ -14,7 +14,7 @@ removed.
 steps:
   - name: Label Pull Request
     id: labelPr
-    uses: jburgess/AddRemovePrLabels@v1.0.3
+    uses: jburgess/AddRemovePrLabels@v1.0.4
     with:
       githubToken: ${{ github.token }}
       labelsToAdd: label1,label2

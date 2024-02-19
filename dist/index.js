@@ -29040,7 +29040,7 @@ async function run() {
     // Get the intersection of labels to remove based on the labelsPostAdd
     const labelsToRemoveSet = new Set(labelsToRemove)
     const labelsToRemoveIntersection = labelsPostAdd.filter(label =>
-      labelsToRemoveSet.has(label)
+      labelsToRemoveSet.has(label.name)
     )
 
     // Remove labels from the pull request if the Set contains any labels
@@ -29050,7 +29050,7 @@ async function run() {
           core.debug(`Removing label: ${label.name}`)
           await octokit.rest.issues.removeLabel({
             ...parameters,
-            name: label
+            name: label.name
           })
         } catch (error) {
           // Log the error and continue with the next label
